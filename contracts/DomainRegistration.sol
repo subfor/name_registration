@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./StringUtilsAssembly.sol";
+import "./StringUtils.sol";
 import "hardhat/console.sol";
 
 contract DomainRegistry {
