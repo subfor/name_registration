@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "./StringUtils.sol";
-import "hardhat/console.sol";
 
 contract DomainRegistry {
     
