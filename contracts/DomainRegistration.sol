@@ -10,7 +10,6 @@ contract DomainRegistry is Ownable {
     mapping(string => address) public domainToOwner;
     uint public registrationFee = 1 ether;
 
-    // Конструктор для задания начального владельца контракта
     constructor() Ownable(msg.sender) {}
 
     function isValidForRegistration(string memory _domain) internal view returns (bool) {
@@ -31,8 +30,6 @@ contract DomainRegistry is Ownable {
         require(msg.value == registrationFee, "Incorrect registration fee");
         
         domainToOwner[stripedDomain] = msg.sender;
-        
-        // Перенаправляем плату на адрес владельца контракта
         payable(owner()).transfer(registrationFee);
     }
 

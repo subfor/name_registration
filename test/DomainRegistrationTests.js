@@ -1,11 +1,8 @@
-// import {time, loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-// import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-// import { expect } from "chai";
-// import { ethers } from "hardhat";
 const { time, loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
 const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const { BigNumber } = require('ethers');
 
 describe("DomainRegistry", function () {
   let DomainRegistry, domainRegistry, owner, addr1, addr2;
@@ -70,10 +67,8 @@ describe("DomainRegistry", function () {
 
     const domainRegistryInstance = await DomainRegistry.deploy();
 
-    // Теперь что мы знаем, что deploy() возвращает экземпляр контракта, мы можем продолжить без проверок
     console.log("Contract deployed at:", await domainRegistryInstance.getAddress());
 
-    // Регистрируем домены
     const tx1 = await domainRegistryInstance.registerDomain("com", { value: ethers.parseEther("1") });
     const receipt1 = await tx1.wait();
     console.log("Gas used for registering 'com' domain:", receipt1.gasUsed.toString());
@@ -86,26 +81,21 @@ describe("DomainRegistry", function () {
     const receipt3 = await tx3.wait();
     console.log("Gas used for registering 'https://www.example.com' domain:", receipt2.gasUsed.toString());
 });
-
-  // it("should deploy contract and register domains", async function() {
-  //   const DomainRegistry = await ethers.getContractFactory("DomainRegistry");
-
-  //   // Запуск контракта и вывод стоимости газа
-  //   const deployTx = await DomainRegistry.deploy();
-  //   const deployReceipt = await deployTx.deployTransaction.wait();
-  //   console.log("Gas used for deploying the contract:", deployReceipt.gasUsed.toString());
-
-  //   const registry = await DomainRegistry.deployed();
-
-  //   // Регистрация домена com и вывод стоимости газа
-  //   const tx1 = await registry.registerDomain("com", { value: ethers.utils.parseEther("1") });
-  //   const receipt1 = await tx1.wait();
-  //   console.log("Gas used for registering 'com' domain:", receipt1.gasUsed.toString());
-
-  //   // Регистрация домена example.com и вывод стоимости газа
-  //   const tx2 = await registry.registerDomain("example.com", { value: ethers.utils.parseEther("1") });
-  //   const receipt2 = await tx2.wait();
-  //   console.log("Gas used for registering 'example.com' domain:", receipt2.gasUsed.toString());
-  // });
-  // Добавьте дополнительные тесты по мере необходимости...
+  it("should transfer registration fee to the contract owner", async () => {
+    const initialBalance = await ethers.provider.getBalance(owner.address);
+    const initialBalanceEther = parseFloat(ethers.formatEther(initialBalance));
+    console.log("Initial balance of owner:", initialBalanceEther, "ETH");
+    
+    const tx = await domainRegistry.connect(addr1).registerDomain("com", { value: ethers.parseEther("1") });
+    const receipt = await tx.wait();
+    console.log("Gas used for registering 'com' domain:", receipt.gasUsed.toString());
+    
+    const finalBalance = await ethers.provider.getBalance(owner.address);
+    const finalBalanceEther = parseFloat(ethers.formatEther(finalBalance));
+    console.log("Final balance of owner:", finalBalanceEther, "ETH");
+    
+    const diff = finalBalanceEther - initialBalanceEther;
+  
+    expect(diff).to.be.closeTo(1, 0.01); 
+  });
 });
