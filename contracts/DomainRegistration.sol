@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./StringUtils.sol";
-import "hardhat/console.sol";
 
 contract DomainRegistry is Ownable {
     
