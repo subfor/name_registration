@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./StringUtils.sol";
 import "hardhat/console.sol";
 
-contract DomainRegistry {
+contract DomainRegistry is Ownable {
     
     mapping(string => address) public domainToOwner;
-    mapping(address => uint) public ownerBalance;
-    uint public domainDeposit = 1 ether;
+    uint public registrationFee = 1 ether;
 
+    // Конструктор для задания начального владельца контракта
+    constructor() Ownable(msg.sender) {}
 
     function isValidForRegistration(string memory _domain) internal view returns (bool) {
         string memory parentDomain = StringUtils.getParentDomain(_domain);
@@ -20,24 +22,24 @@ contract DomainRegistry {
             return (getDomainOwner(parentDomain) != address(0));
         }
     }
+
     function registerDomain(string memory _domain) public payable {
         string memory stripedDomain = StringUtils.stripUrl(_domain);
         
         require(domainToOwner[stripedDomain] == address(0), "Domain already registered");
         require(isValidForRegistration(stripedDomain), "Invalid domain");
-        require(msg.value == domainDeposit, "Incorrect deposit amount");
+        require(msg.value == registrationFee, "Incorrect registration fee");
         
-        domainToOwner[stripedDomain] = payable(msg.sender);
-        ownerBalance[msg.sender] += msg.value;
+        domainToOwner[stripedDomain] = msg.sender;
+        
+        // Перенаправляем плату на адрес владельца контракта
+        payable(owner()).transfer(registrationFee);
     }
-
 
     function releaseDomain(string memory _domain) public {
         string memory stripedDomain = StringUtils.stripUrl(_domain);
         require(domainToOwner[stripedDomain] == msg.sender, "Only the domain owner can release it");
         
-        payable(msg.sender).transfer(domainDeposit);
-        ownerBalance[msg.sender] -= domainDeposit;
         domainToOwner[stripedDomain] = address(0);
     }
 

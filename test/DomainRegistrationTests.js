@@ -24,7 +24,7 @@ describe("DomainRegistry", function () {
 
   it("should not allow registration of a domain if deposit is incorrect", async () => {
     await expect(domainRegistry.connect(owner).registerDomain("example", { value: ethers.parseEther("0.5") }))
-      .to.be.revertedWith("Incorrect deposit amount");
+      .to.be.revertedWith("Incorrect registration fee");
   });
 
   it("should not allow registration of already registered domain", async () => {
