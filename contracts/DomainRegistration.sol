@@ -1,40 +1,48 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "./StringUtilsAssembly.sol";
+import "hardhat/console.sol";
+
 contract DomainRegistry {
     
     mapping(string => address) public domainToOwner;
     mapping(address => uint) public ownerBalance;
     uint public domainDeposit = 1 ether;
 
-    function isValidFirstLevelDomain(string memory _domain) internal pure returns (bool) {
-        bytes memory domainBytes = bytes(_domain);
-        for (uint i = 0; i < domainBytes.length; i++) {
-            if (domainBytes[i] == '.') {
-                return false;
-            }
-        }
-        return true;
-    }
 
+    function isValidForRegistration(string memory _domain) internal view returns (bool) {
+        string memory parentDomain = StringUtils.getParentDomain(_domain);
+
+        if (StringUtils.isValidFirstLevelDomain(_domain)) {
+            return (getDomainOwner(_domain) == address(0));
+        } else {
+            return (getDomainOwner(parentDomain) != address(0));
+        }
+    }
     function registerDomain(string memory _domain) public payable {
-        require(isValidFirstLevelDomain(_domain), "Invalid domain format");
-        require(msg.value == domainDeposit, "Incorrect deposit amount");
-        require(domainToOwner[_domain] == address(0), "Domain already registered");
+        string memory stripedDomain = StringUtils.stripUrl(_domain);
         
-        domainToOwner[_domain] = payable(msg.sender);
+        require(domainToOwner[stripedDomain] == address(0), "Domain already registered");
+        require(isValidForRegistration(stripedDomain), "Invalid domain");
+        require(msg.value == domainDeposit, "Incorrect deposit amount");
+        
+        domainToOwner[stripedDomain] = payable(msg.sender);
         ownerBalance[msg.sender] += msg.value;
     }
 
+
     function releaseDomain(string memory _domain) public {
-        require(domainToOwner[_domain] == msg.sender, "Only the domain owner can release it");
+        string memory stripedDomain = StringUtils.stripUrl(_domain);
+        require(domainToOwner[stripedDomain] == msg.sender, "Only the domain owner can release it");
         
         payable(msg.sender).transfer(domainDeposit);
         ownerBalance[msg.sender] -= domainDeposit;
-        domainToOwner[_domain] = address(0);
+        domainToOwner[stripedDomain] = address(0);
     }
 
     function getDomainOwner(string memory _domain) public view returns (address) {
-        return domainToOwner[_domain];
+        string memory stripedDomain = StringUtils.stripUrl(_domain);
+        return domainToOwner[stripedDomain];
     }
 }
