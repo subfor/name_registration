@@ -14,8 +14,9 @@ contract DomainRegistry is Ownable {
     function isValidForRegistration(string memory _domain) internal view returns (bool) {
         string memory parentDomain = StringUtils.getParentDomain(_domain);
 
-        if (StringUtils.isValidFirstLevelDomain(_domain)) {
-            return (getDomainOwner(_domain) == address(0));
+        string memory stripedDomain = StringUtils.stripUrl(_domain);
+        if (StringUtils.isValidFirstLevelDomain(stripedDomain)) {
+            return (getDomainOwner(stripedDomain) == address(0));
         } else {
             return (getDomainOwner(parentDomain) != address(0));
         }
