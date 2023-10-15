@@ -6,10 +6,10 @@ import "./StringUtils.sol";
 
 contract DomainRegistry is Ownable {
     
+    constructor() Ownable(msg.sender) {}
+
     mapping(string => address) public domainToOwner;
     uint public registrationFee = 1 ether;
-
-    constructor() Ownable(msg.sender) {}
 
     function isValidForRegistration(string memory _domain) internal view returns (bool) {
         string memory parentDomain = StringUtils.getParentDomain(_domain);
